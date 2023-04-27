@@ -1,0 +1,167 @@
+
+
+
+
+
+#include <SoftwareSerial.h>
+
+#define myTX  2
+#define myRX  3 
+
+
+#define MA1  8
+#define MA2  7
+#define MAen 9
+
+#define MB3  6
+#define MB4  5
+#define MBen 4
+
+#define LR A1
+#define LL A0
+
+#define BLINK_CYCLE 500
+
+#define ENCODER_R A6
+#define ENCODER_L A7
+
+
+volatile unsigned long  prevTime = millis(),
+                        color = 0;
+
+volatile long prevEncoderReadR = 0,
+              prevEncoderReadL = 0;
+
+volatile long totalReadR = 0,
+              totalReadL = 0;
+
+SoftwareSerial bt(myRX, myTX);
+
+
+
+
+
+
+
+
+void setup() {
+  pinMode(MA1,OUTPUT); 
+  pinMode(MA2,OUTPUT);
+  pinMode(MAen,OUTPUT);
+  pinMode(MB3,OUTPUT); 
+  pinMode(MB4,OUTPUT); 
+  pinMode(MBen,OUTPUT); 
+
+  pinMode(LR, OUTPUT);
+  pinMode(LL, OUTPUT);
+
+  pinMode(ENCODER_L, INPUT);
+  pinMode(ENCODER_R, INPUT);
+
+  Serial.begin(9600);
+  bt.begin(9600);
+}
+
+char reading=0;
+
+void loop() {
+  // read from serial port
+  if(bt.available()){
+    // store reading in 'reading'
+    reading = bt.read();
+    Serial.print(reading);
+  }
+
+  
+  updateEncoderReadings();
+  
+
+  // switch case : F: forward , B: backward , R:right, L:left
+  switch (reading) {
+    case 'F':case 'f':    robotForward(255);    break;    
+    case 'B':case 'b':    robotBackward(255);   break;    
+    case 'R':case 'r':    robotTurnRight(255);  break;    
+    case 'L':case 'l':    robotTurnLeft(255);   break;    
+    case 'S':case 's':    robotStop();          break;    
+  }
+
+
+
+}
+//controlling the speed lesa 
+
+//controlling directions 
+void robotForward (int robospeed)
+{
+  digitalWrite(MA1, HIGH);      digitalWrite(MA2, LOW);
+  digitalWrite(MB3, HIGH);      digitalWrite(MB4, LOW);
+  
+  if(totalReadL > totalReadR){
+    analogWrite(MBen, 0);
+  }
+  else if(totalReadR > totalReadL){
+    analogWrite(MAen, 0);
+  }
+  else{
+    analogWrite(MAen, robospeed);
+    analogWrite(MBen, robospeed);
+  }
+
+  digitalWrite(LR, LOW); digitalWrite(LL, LOW);
+}
+
+void robotBackward (int robospeed)
+{
+  digitalWrite(MA1, LOW);       digitalWrite(MA2, HIGH);
+  digitalWrite(MB3, LOW);       digitalWrite(MB4, HIGH);
+
+  if(totalReadL > totalReadR){
+    analogWrite(MBen, 0);
+  }
+  else if(totalReadR > totalReadL){
+    analogWrite(MAen, 0);
+  }
+  else{
+    analogWrite(MAen, robospeed);
+    analogWrite(MBen, robospeed);
+  }
+
+  digitalWrite(LR, LOW); digitalWrite(LL, LOW);
+}
+
+
+//MA ---- Left & MB -----Right
+void robotTurnRight (int robospeed)
+{
+  analogWrite(MAen, robospeed);     digitalWrite(MA1, HIGH);      digitalWrite(MA2, LOW);
+  analogWrite(MBen, robospeed);     digitalWrite(MB3, LOW);       digitalWrite(MB4, HIGH);
+
+  if(millis() - prevTime > BLINK_CYCLE ){ prevTime=millis(); digitalWrite(LR,  (color++)%2); }
+}
+
+void robotTurnLeft (int robospeed)
+{
+  analogWrite(MAen, robospeed);     digitalWrite(MA1, LOW);       digitalWrite(MA2, HIGH);
+  analogWrite(MBen, robospeed);     digitalWrite(MB3, HIGH);      digitalWrite(MB4, LOW);
+
+  if(millis() - prevTime > BLINK_CYCLE ){ prevTime=millis(); digitalWrite(LL, (color++%2)); }
+}
+
+void robotStop ()
+{
+  digitalWrite(MA1, LOW);       digitalWrite(MA2, LOW);
+  digitalWrite(MB3, LOW);       digitalWrite(MB4, LOW);
+
+  digitalWrite(LR,  LOW);  digitalWrite(LL, LOW);
+  totalReadL = totalReadR = 0;
+}
+
+
+void updateEncoderReadings(){
+  if(   digitalRead(ENCODER_L) - prevEncoderReadL   ){    ++totalReadL; }
+  if(   digitalRead(ENCODER_R) - prevEncoderReadR   ){    ++totalReadR; }
+  prevEncoderReadR = digitalRead(ENCODER_R);
+  prevEncoderReadL = digitalRead(ENCODER_L);
+
+}
+

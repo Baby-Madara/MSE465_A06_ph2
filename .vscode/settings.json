@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "io.h": "c",
+        "iom328p.h": "c",
+        "bitmath.h": "c",
+        "std_types.h": "c",
+        "dio.h": "c",
+        "time.h": "c"
+    }
+}
