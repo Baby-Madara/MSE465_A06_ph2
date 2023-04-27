@@ -20,7 +20,7 @@
  *              |       |RST           RST|       |
  *              |       |GND   * * *   RX0|  PD0  |  BTTx brown (new)
  *              |       |VIN   * * *   TX1|  PD1  |  BTRx black (new)
- *                       _________________
+ *                      |_________________|
  *                (hardware conection is outside)                         
  *                   
  *                   
