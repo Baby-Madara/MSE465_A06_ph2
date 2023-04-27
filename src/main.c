@@ -33,6 +33,7 @@
 // #define F_CPU 16000000UL 		//the default value in platformIO
 #include "MCAL/DIO/DIO.h"
 #include <avr/interrupt.h>
+#include <time.h>
 
 
 // #include <SoftwareSerial.h>
@@ -67,13 +68,17 @@ volatile long 			prevEncoderReadR = 0,
 volatile long 			totalReadR 		 = 0,
 						totalReadL 		 = 0;
 
+
+
+time_t tm;
+
 // SoftwareSerial bt(myRX, myTX);
 
 
 
-ISR(TIMER1_COMPA_vect) {
-	millis++; // Increment millis counter every 1 millisecond
-}
+// ISR(TIMER1_COMPA_vect) {
+// 	millis++; // Increment millis counter every 1 millisecond
+// }
 
 void timerSetup();
 u8   UART_getc     ();
@@ -103,7 +108,7 @@ int main()
 	DIO_PinMode(ENCODER_L, INPUT);
 	DIO_PinMode(ENCODER_R, INPUT);
 
-	timerSetup();
+	
 	// Serial.begin(9600);
 	// bt.begin(9600);
 
@@ -118,29 +123,30 @@ int main()
 	// enable the transmitter and receiver
     UCSR0B |= (1 << RXEN0) | (1 << TXEN0);
 
+	// timerSetup();
 
 
-u8 reading = 0;
+	volatile u8 reading = 0;
 
 while(1)
 {
-	while (1)
-	{
-		for(int i=0; i<2000; i++){ robotForward(255);    _delay_ms(1);}
-		for(int i=0; i<2000; i++){ robotBackward(255);   _delay_ms(1);}
-		for(int i=0; i<2000; i++){ robotTurnRight(255);  _delay_ms(1);}
-		for(int i=0; i<2000; i++){ robotTurnLeft(255);   _delay_ms(1);}
-		for(int i=0; i<2000; i++){ robotStop();          _delay_ms(1);}
-	}
+	// while (1)
+	// {
+	// 	for(int i=0; i<2000; i++){ robotForward(255);    _delay_ms(1);}
+	// 	for(int i=0; i<2000; i++){ robotBackward(255);   _delay_ms(1);}
+	// 	for(int i=0; i<2000; i++){ robotTurnRight(255);  _delay_ms(1);}
+	// 	for(int i=0; i<2000; i++){ robotTurnLeft(255);   _delay_ms(1);}
+	// 	for(int i=0; i<2000; i++){ robotStop();          _delay_ms(1);}
+	// }
 	
 
 
 	// read from serial port
-	if(UART_available()){
+	// if(UART_available()){
 		// store reading in 'reading'
 		reading = UART_getc();
 		// Serial.print(reading);
-	}
+	// }
 
 	
 	updateEncoderReadings();
@@ -164,74 +170,113 @@ while(1)
 
 void robotBackward (int robospeed)
 {
-	DIO_DigitalWritePin(MA1, HIGH);      DIO_DigitalWritePin(MA2, LOW);
-	DIO_DigitalWritePin(MB3, HIGH);      DIO_DigitalWritePin(MB4, LOW);
+	DIO_DigitalWritePin(MA1, HIGH);      
+	DIO_DigitalWritePin(MA2, LOW);
+
+	DIO_DigitalWritePin(MB3, HIGH);      
+	DIO_DigitalWritePin(MB4, LOW);
 	
-	if(totalReadL > totalReadR){
+	if(totalReadL > totalReadR)
+	{
 		DIO_DigitalWritePin(MAen, 0);
 	}
-	else if(totalReadR > totalReadL){
+
+	else if(totalReadR > totalReadL)
+	{
 		DIO_DigitalWritePin(MBen, 0);
 	}
+	
 	else{
 		DIO_DigitalWritePin(MAen, HIGH);
 		DIO_DigitalWritePin(MBen, HIGH);
 	}
 
-	DIO_DigitalWritePin(LR, LOW); DIO_DigitalWritePin(LL, LOW);
+	DIO_DigitalWritePin(LR, LOW); 
+	DIO_DigitalWritePin(LL, LOW);
 }
 
 void robotForward (int robospeed)
 {
-	DIO_DigitalWritePin(MA1, LOW);       DIO_DigitalWritePin(MA2, HIGH);
-	DIO_DigitalWritePin(MB3, LOW);       DIO_DigitalWritePin(MB4, HIGH);
+	DIO_DigitalWritePin(MA1, LOW);       
+	DIO_DigitalWritePin(MA2, HIGH);
 
-	if(totalReadL > totalReadR){
+	DIO_DigitalWritePin(MB3, LOW);       
+	DIO_DigitalWritePin(MB4, HIGH);
+
+	if(totalReadL > totalReadR)
+	{
 		DIO_DigitalWritePin(MAen, 0);
 	}
-	else if(totalReadR > totalReadL){
+	else if(totalReadR > totalReadL)
+	{
 		DIO_DigitalWritePin(MBen, 0);
 	}
-	else{
+	else
+	{
 		DIO_DigitalWritePin(MAen, HIGH);
 		DIO_DigitalWritePin(MBen, HIGH);
 	}
 
-	DIO_DigitalWritePin(LR, LOW); DIO_DigitalWritePin(LL, LOW);
+	DIO_DigitalWritePin(LR, LOW); 
+	DIO_DigitalWritePin(LL, LOW);
 }
 
 
 //MA ---- Left & MB -----Right
 void robotTurnRight (int robospeed)
 {
-	DIO_DigitalWritePin(MAen, HIGH);     DIO_DigitalWritePin(MA1, HIGH);      DIO_DigitalWritePin(MA2, LOW);
-	DIO_DigitalWritePin(MBen, HIGH);     DIO_DigitalWritePin(MB3, LOW);       DIO_DigitalWritePin(MB4, HIGH);
+	DIO_DigitalWritePin(MAen, HIGH);     
+	DIO_DigitalWritePin(MA1, HIGH);      
+	DIO_DigitalWritePin(MA2, LOW);
 
-	if(millis - prevTime > BLINK_CYCLE ){ prevTime=millis; DIO_DigitalWritePin(LR,  (color++)%2); }
+	DIO_DigitalWritePin(MBen, HIGH);     
+	DIO_DigitalWritePin(MB3, LOW);       
+	DIO_DigitalWritePin(MB4, HIGH);
+
+	if(time(&tm) - prevTime > BLINK_CYCLE ){ 
+		prevTime=time(&tm); DIO_DigitalWritePin(LR,  (color++)%2); 
+	}
 }
 
 void robotTurnLeft (int robospeed)
 {
-	DIO_DigitalWritePin(MAen, HIGH);     DIO_DigitalWritePin(MA1, LOW);       DIO_DigitalWritePin(MA2, HIGH);
-	DIO_DigitalWritePin(MBen, HIGH);     DIO_DigitalWritePin(MB3, HIGH);      DIO_DigitalWritePin(MB4, LOW);
+	DIO_DigitalWritePin(MAen, HIGH);     
+	DIO_DigitalWritePin(MA1, LOW);       
+	DIO_DigitalWritePin(MA2, HIGH);
+	
+	DIO_DigitalWritePin(MBen, HIGH);     
+	DIO_DigitalWritePin(MB3, HIGH);      
+	DIO_DigitalWritePin(MB4, LOW);
 
-	if(millis - prevTime > BLINK_CYCLE ){ prevTime=millis; DIO_DigitalWritePin(LL,  (color++)%2); }
+	if(time(&tm) - prevTime > BLINK_CYCLE )
+	{
+		prevTime=time(&tm); 
+		DIO_DigitalWritePin(LL,  (color++)%2); 
+	}
 }
 
 void robotStop ()
 {
-	DIO_DigitalWritePin(MA1, LOW);       DIO_DigitalWritePin(MA2, LOW);
-	DIO_DigitalWritePin(MB3, LOW);       DIO_DigitalWritePin(MB4, LOW);
+	DIO_DigitalWritePin(MA1, LOW);       
+	DIO_DigitalWritePin(MA2, LOW);
 
-	DIO_DigitalWritePin(LR,  LOW);  DIO_DigitalWritePin(LL, LOW);
+	DIO_DigitalWritePin(MB3, LOW);       
+	DIO_DigitalWritePin(MB4, LOW);
+
+	DIO_DigitalWritePin(LR,  LOW);  
+	DIO_DigitalWritePin(LL, LOW);
 	totalReadL = totalReadR = 0;
 }
 
 
 void updateEncoderReadings()
 {
-	if(   DIO_DigitalReadPin(ENCODER_L) - prevEncoderReadL   ){    ++totalReadL; }
-	if(   DIO_DigitalReadPin(ENCODER_R) - prevEncoderReadR   ){    ++totalReadR; }
+	if(   DIO_DigitalReadPin(ENCODER_L) - prevEncoderReadL   )
+	{    ++totalReadL; }
+
+	if(   DIO_DigitalReadPin(ENCODER_R) - prevEncoderReadR   )
+	{    ++totalReadR; }
+
 	prevEncoderReadR = DIO_DigitalReadPin(ENCODER_R);
 	prevEncoderReadL = DIO_DigitalReadPin(ENCODER_L);
 
@@ -257,15 +302,9 @@ bool UART_available(){
 u8 UART_getc(void)
 {
     // check if there is available
-    if(UART_available()){
-		// return data
-		return UDR0;
+    
+	return UDR0;
 
-	}
-	else
-	{
-		return 0;
-	}
 
 }
 
