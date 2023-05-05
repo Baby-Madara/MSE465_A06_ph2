@@ -5,6 +5,9 @@
         "bitmath.h": "c",
         "std_types.h": "c",
         "dio.h": "c",
-        "time.h": "c"
+        "time.h": "c",
+        "customuart.h": "c",
+        "delay.h": "c",
+        "robotctrl.h": "c"
     }
 }

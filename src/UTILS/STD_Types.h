@@ -1,7 +1,7 @@
 #ifndef STD_TYPES_H_INCLUDED
 #define STD_TYPES_H_INCLUDED
 
-#define NULL ((void*) (0x00))
+// #define NULL ((void*) (0x00))
 
 #define TRUE	1
 #define FALSE	0

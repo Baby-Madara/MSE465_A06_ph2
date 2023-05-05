@@ -91,6 +91,11 @@ u8   DIO_DigitalReadPort	(u8 port					);
 u8   DIO_DigitalReadPort	(u8 port					);
 u8   DIO_DigitalReadPort	(u8 port					);
 
+
+void DIO_PWMWritePin(u8 port, u8 pin, u8 val);
+void DIO_PWMInitPin(u8 port, u8 pin);
+
+
 // void DIO_DisablePullUp		(void);
 // void DIO_EnablePullUp		(void);
 

@@ -198,6 +198,44 @@ u8   DIO_DigitalReadPort		(u8 port			){
 }
 
 
+void DIO_PWMWritePin(u8 port, u8 pin, u8 val)
+{
+
+}
+
+
+// IT ONLY WORKS FOR OC1A and OC1B 
+void DIO_PWMInitPin(u8 port, u8 pin)
+{
+	// Set PWM preScalar
+
+	// set non invertng mode
+	SET_BIT(TCCR1A, COM1A1);
+	CLEAR_BIT(TCCR1A, COM1A0);
+
+	SET_BIT(TCCR1B, COM1B1);
+	CLEAR_BIT(TCCR1B, COM1B0);
+
+
+	// Set PWM frequency (in this case, 500 Hz)
+
+
+	// Set Timer/Counter1 to PWM mode
+
+
+	// Set OC1A as output pin
+
+
+	// Set duty cycle (in this case, 50%)
+
+}
+
+
+
+
+
+
+
 // void DIO_DisablePullUp		(void){
 // 	SET_BIT(SFIOR, PUD);
 // }
