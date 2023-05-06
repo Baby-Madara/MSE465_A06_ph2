@@ -31,141 +31,13 @@
  *                   
 */
 
-/*
-
-#include <avr/io.h>
-#include <util/delay.h>
-
-#include "HAL/robotCtrl.h"
-
-
-
-
-
-
-
-
-
-int main()
-{
-	
-	SET_BIT(DDRB, 1);
-	SET_BIT(DDRB, 2);
-
-	// TCCR1A = (1<< WGM11) | (1<<COM1A1) | (1<<COM1B1) | (1<<COM1A0) | (1<<COM1B0);
-	TCCR1A = (1<< WGM11) | (1<<COM1A1) | (1<<COM1B1) | (1<<COM1A0) | (1<<COM1B0);
-	TCCR1B = (1<< WGM13) | (1<<WGM12) | (1<<CS10);
-	
-	ICR1 = 255;
-
-
-	OCR1A = 128;
-	OCR1B = 128;
-	
-
-while (1)
-{
-	
-	
-	for(int i=0;  i<256 ; i++)
-	{
-		OCR1A =i;
-		OCR1B =i;
-		_delay_ms(10);
-	}
-	
-	
-	
-
-}
-
-}
-
-*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-int main(void)
-{
-	// Set PB1 to be an output (Pin9 Arduino UNO)
-	DDRB |= (1 << PB1);
-	DDRB |= (1 << PB2);
-
-	// Clear Timer/Counter Control Registers
-	TCCR1A = 0;
-	TCCR1B = 0;
-
-	// Set non-inverting mode
-	TCCR1A |= (1 << COM1B0);
-	TCCR1A &=~(1 << COM1B1);
-
-	TCCR1A |= (1 << COM1A1);
-	TCCR1A |= (1 << COM1A1);
-
-	// Set fast PWM Mode 14
-	TCCR1A |= (1 << WGM11);
-	TCCR1B |= (1 << WGM10);
-	TCCR1B |= (1 << WGM12);
-	TCCR1B |= (1 << WGM13);
-	
-	// Set prescaler to 64 and starts PWM
-	TCCR1B |= (1 << CS10);
-	TCCR1B |= (1 << CS11);
-	
-	// Set PWM frequency/top value
-	ICR1 = 255;
-	OCR1A = 0;
-	
-	
-	
-	
-	
-	
-while(1)
-{
-	for(int i=0;  i<256 ; i++)
-	{
-		OCR1A =i;
-		OCR1B =i;
-		_delay_ms(10);
-	}
-	_delay_ms(1000);
-	
-	OCR1A = 0;
-	OCR1B = 0;
-
-	_delay_ms(1000);
-	
-	
-	
-}
-}
-
-*/
-
-
-
-
-
-
 
 
 // #define F_CPU 16000000UL 		//the default value in platformIO
-#include "HAL/robotCtrl.h"
 // #include <SoftwareSerial.h>
 // #define myTX  2
 // #define myRX  3 
+#include "HAL/robotCtrl.h"
 
 
 #define MA1  DIO_B0
@@ -185,13 +57,10 @@ while(1)
 #define ENCODER_L DIO_C5
 
 volatile unsigned long 	millis 			 = 0;
-
 volatile unsigned long  prevTime 		 = 0,
 						color    		 = 0;
-
 volatile long 			prevEncoderReadR = 0,
 						prevEncoderReadL = 0;
-
 volatile long 			totalReadR 		 = 0,
 						totalReadL 		 = 0;
 
@@ -199,12 +68,6 @@ volatile long 			totalReadR 		 = 0,
 
 
 // SoftwareSerial bt(myRX, myTX);
-
-
-
-// ISR(TIMER1_COMPA_vect) {
-// 	millis++; // Increment millis counter every 1 millisecond
-// }
 
 void timerSetup();
 u8   UART_getc     ();
@@ -278,9 +141,7 @@ while(1)
 
 }
 }
-//controlling the speed lesa 
 
-//controlling directions 
 
 void robotBackward (int robospeed)
 {
@@ -359,8 +220,10 @@ void robotTurnRight (int robospeed)
 
 	DIO_DigitalWritePin(LL, LOW);
 	DIO_DigitalWritePin(LR, HIGH);
-	// if(time(&tm) - prevTime > BLINK_CYCLE ){ 
-	// 	prevTime=time(&tm); DIO_DigitalWritePin(LR,  (color++)%2); 
+	// if(time(&tm) - prevTime > BLINK_CYCLE )
+	// { 
+	// prevTime=time(&tm);
+	// DIO_DigitalWritePin(LR,  (color++)%2); 
 	// }
 }
 
@@ -413,12 +276,6 @@ void updateEncoderReadings()
 }
 
 
-
-
-
-
-
-
 bool UART_available(){
 
 	if (UCSR0A & (1 << RXC0))	{		return 1;	}
@@ -427,15 +284,6 @@ bool UART_available(){
 }
 
 
-
-
-u8 UART_getc(void)
-{
-    // check if there is available
-    
-	return UDR0;
-
-}
 
 
 void timerSetup()
