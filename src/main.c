@@ -12,8 +12,8 @@
  *           LL |  PC0  |A0               D9|  PB1     | MAen
  *           LR |  PC1  |A1               D8|  PB0     | MA1
  *       MB4    |  PC2  |A2    arduino    D7|  PD7     | MA2
- *              |  PC3  |A3      nano     D6|  PD6     | MB3
- *    ENCODER_R |  PC4  |A4      OBD      D5|PD5 TxLED | MB4   (old) --> BTRx black (new)
+ *              |  PC3  |A3      uno      D6|  PD6     | MB3
+ *    ENCODER_R |  PC4  |A4      nBD      D5|PD5 TxLED | MB4   (old) --> BTRx black (new)
  *    ENCODER_L |  PC5  |A5    (is in)    D4|PD4 RxLED | MBen  (old) --> BTTx brown (new)
  *              |       |A6               D3|  PD3     |  BTTx brown myRX(old)
  *              |       |A7  ATMega328p   D2|  PD2     |  BTRx black myTX(old)
@@ -30,6 +30,133 @@
  *                   
  *                   
 */
+
+/*
+
+#include <avr/io.h>
+#include <util/delay.h>
+
+#include "HAL/robotCtrl.h"
+
+
+
+
+
+
+
+
+
+int main()
+{
+	
+	SET_BIT(DDRB, 1);
+	SET_BIT(DDRB, 2);
+
+	// TCCR1A = (1<< WGM11) | (1<<COM1A1) | (1<<COM1B1) | (1<<COM1A0) | (1<<COM1B0);
+	TCCR1A = (1<< WGM11) | (1<<COM1A1) | (1<<COM1B1) | (1<<COM1A0) | (1<<COM1B0);
+	TCCR1B = (1<< WGM13) | (1<<WGM12) | (1<<CS10);
+	
+	ICR1 = 255;
+
+
+	OCR1A = 128;
+	OCR1B = 128;
+	
+
+while (1)
+{
+	
+	
+	for(int i=0;  i<256 ; i++)
+	{
+		OCR1A =i;
+		OCR1B =i;
+		_delay_ms(10);
+	}
+	
+	
+	
+
+}
+
+}
+
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+int main(void)
+{
+	// Set PB1 to be an output (Pin9 Arduino UNO)
+	DDRB |= (1 << PB1);
+	DDRB |= (1 << PB2);
+
+	// Clear Timer/Counter Control Registers
+	TCCR1A = 0;
+	TCCR1B = 0;
+
+	// Set non-inverting mode
+	TCCR1A |= (1 << COM1B0);
+	TCCR1A &=~(1 << COM1B1);
+
+	TCCR1A |= (1 << COM1A1);
+	TCCR1A |= (1 << COM1A1);
+
+	// Set fast PWM Mode 14
+	TCCR1A |= (1 << WGM11);
+	TCCR1B |= (1 << WGM10);
+	TCCR1B |= (1 << WGM12);
+	TCCR1B |= (1 << WGM13);
+	
+	// Set prescaler to 64 and starts PWM
+	TCCR1B |= (1 << CS10);
+	TCCR1B |= (1 << CS11);
+	
+	// Set PWM frequency/top value
+	ICR1 = 255;
+	OCR1A = 0;
+	
+	
+	
+	
+	
+	
+while(1)
+{
+	for(int i=0;  i<256 ; i++)
+	{
+		OCR1A =i;
+		OCR1B =i;
+		_delay_ms(10);
+	}
+	_delay_ms(1000);
+	
+	OCR1A = 0;
+	OCR1B = 0;
+
+	_delay_ms(1000);
+	
+	
+	
+}
+}
+
+*/
+
+
+
+
 
 
 
@@ -114,11 +241,11 @@ int main()
 
 
 	// initializing timer 1A & 1B as fast_PWM, non_inverting 
+	timerSetup();
 	
 	
 	UART_Init();
 
-	// timerSetup();
 
 
 	volatile u8 reading = 0;
@@ -126,7 +253,7 @@ int main()
 while(1)
 {
 
-	updateEncoderReadings();
+	// updateEncoderReadings();
 	reading = UART_RxChar();
 
 	// switch case : F: forward , B: backward , R:right, L:left
@@ -313,15 +440,20 @@ u8 UART_getc(void)
 
 void timerSetup()
 {
-	cli(); // Disable interrupts
+	
+	SET_BIT(DDRB, 1);
+	SET_BIT(DDRB, 2);
 
-	// Configure Timer/Counter 1
-	TCCR1A |= (1 << WGM12); // Set CTC mode (Clear Timer on Compare Match)
-	OCR1A = 15; // Set compare match value for 1 millisecond interrupt
-	// OCR1A = 15999; // Set compare match value for 1 millisecond interrupt
-	TIMSK1 |= (1 << OCIE1A); // Enable Timer/Counter 1 Compare Match A interrupt
+	// TCCR1A = (1<< WGM11) | (1<<COM1A1) | (1<<COM1B1) | (1<<COM1A0) | (1<<COM1B0);
+	TCCR1A = (1<< WGM11) | (1<<COM1A1) | (1<<COM1B1) | (1<<COM1A0) | (1<<COM1B0);
+	TCCR1B = (1<< WGM13) | (1<<WGM12) | (1<<CS10);
+	
+	ICR1 = 255;
 
-	sei(); // Enable interrupts
+
+	OCR1A = 128;
+	OCR1B = 128;
+	
 }
 
 

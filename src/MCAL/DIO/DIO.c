@@ -200,7 +200,16 @@ u8   DIO_DigitalReadPort		(u8 port			){
 
 void DIO_PWMWritePin(u8 port, u8 pin, u8 val)
 {
-
+	switch (pin)
+	{
+		case PB1:
+			OCR1A = 255 - val;
+		break;
+		case PB2:
+			OCR1B = 255 - val;
+		break;
+	
+	}
 }
 
 
