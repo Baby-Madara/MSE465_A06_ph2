@@ -8,6 +8,10 @@
         "time.h": "c",
         "customuart.h": "c",
         "delay.h": "c",
-        "robotctrl.h": "c"
+        "robotctrl.h": "c",
+        "lcd_i2c.h": "c",
+        "mux.h": "c",
+        "adc.h": "c",
+        "stdbool.h": "c"
     }
 }

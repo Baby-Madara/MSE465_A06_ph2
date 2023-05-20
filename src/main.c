@@ -5,112 +5,223 @@
  *  			(2) 	Yasmin Ibrahim 		205177
  *  			(3) 	Mahmoud Hashim 		******
  *                   
- *                       _______|---|_______
- *              |  PB5  |D13    |___|    D12|          |
- *              |       |3v3             D11|  PB3     |
- *              |       |AREF            D10|  PB2     | MBen
- *           LL |  PC0  |A0               D9|  PB1     | MAen
- *           LR |  PC1  |A1               D8|  PB0     | MA1
- *       MB4    |  PC2  |A2    arduino    D7|  PD7     | MA2
- *              |  PC3  |A3      uno      D6|  PD6     | MB3
- *    ENCODER_R |  PC4  |A4      nBD      D5|PD5 TxLED | MB4   (old) --> BTRx black (new)
- *    ENCODER_L |  PC5  |A5    (is in)    D4|PD4 RxLED | MBen  (old) --> BTTx brown (new)
- *              |       |A6               D3|  PD3     |  BTTx brown myRX(old)
- *              |       |A7  ATMega328p   D2|  PD2     |  BTRx black myTX(old)
- *              |       |5V  (is inMdle) GND|          |
- *              |       |RST             RST|          |
- *              |       |GND    * * *    RX0|  PD0     |  BTTx brown (new)
- *              |       |VIN    * * *    TX1|  PD1     |  BTRx black (new)
- *              |       |___________________|          |
- *                   (hardware conection is outside)                         
- *                              ^
- *                           black (nano)
- *                           orange (uno)
- *                            
- *                   
+ *                                  _______|---|_______
+ *                         |  PB5  |D13    |___|    D12|          |
+ *                         |       |3v3             D11|  PB3     |
+ *                         |       |AREF            D10|  PB2     | MBen
+ *             ANALOG_PIN  |  PC0  |A0               D9|  PB1     | MAen
+ *                     LR  |  PC1  |A1               D8|  PB0     | MA1
+ *                 MB4     |  PC2  |A2    arduino    D7|  PD7     | MA2
+ *            ()           |  PC3  |A3      uno      D6|  PD6     | MB3
+ *              ENCODER_R  |  PC4  |A4      nBD      D5|PD5 TxLED | MB4   (old) --> BTRx black (new)
+ *              ENCODER_L  |  PC5  |A5    (is in)    D4|PD4 RxLED | MBen  (old) --> BTTx brown (new)
+ *                         |       |A6               D3|  PD3     |  S0
+ *                         |       |A7  ATMega328p   D2|  PD2     |  S1
+ *                         |       |5V  (is inMdle) GND|          |
+ *                         |       |RST             RST|          |
+ *                         |       |GND    * * *    RX0|  PD0     |  BTTx brown (new)
+ *                         |       |VIN    * * *    TX1|  PD1     |  BTRx black (new)
+ *                         |       |___________________|          |
+ *                              (hardware conection is outside)                         
+ *                                         ^
+ *                                      black (nano)
+ *                                      orange (uno)
+ *                                       
+ *                              
  *                   
 */
 
 
 
+
+
 // #define F_CPU 16000000UL 		//the default value in platformIO
-// #include <SoftwareSerial.h>
-// #define myTX  2
-// #define myRX  3 
+
 #include "HAL/robotCtrl.h"
-
-
-#define MA1  DIO_B0
-#define MA2  DIO_D7
-#define MAen DIO_B1  	//OC1A
-
-#define MB3  DIO_D6
-#define MB4  DIO_C2
-#define MBen DIO_B2  	//OC1B
-
-#define LR DIO_C1
-#define LL DIO_C0
-
-#define BLINK_CYCLE 500
-
-#define ENCODER_R DIO_C4
-#define ENCODER_L DIO_C5
-
-volatile unsigned long 	millis 			 = 0;
-volatile unsigned long  prevTime 		 = 0,
-						color    		 = 0;
-volatile long 			prevEncoderReadR = 0,
-						prevEncoderReadL = 0;
-volatile long 			totalReadR 		 = 0,
-						totalReadL 		 = 0;
+#include "HAL/LCD_I2C/LCD_I2C.h"
+#include "HAL/Mux/Mux.h"
 
 
 
 
-// SoftwareSerial bt(myRX, myTX);
 
-void timerSetup();
-u8   UART_getc     ();
-bool UART_available();
 
-void robotForward  (int robospeed);
-void robotBackward (int robospeed);
-void robotTurnRight(int robospeed);
-void robotTurnLeft (int robospeed);
-void robotStop     ();
-void updateEncoderReadings();
 
-volatile u8 spd = 255;
+
+
 
 int main()
 {
-	DIO_PinMode(MA1, OUTPUT); 
-	DIO_PinMode(MA2, OUTPUT);
-	DIO_PinMode(MAen,OUTPUT);
-
-	DIO_PinMode(MB3, OUTPUT); 
-	DIO_PinMode(MB4, OUTPUT); 
-	DIO_PinMode(MBen,OUTPUT); 
+	carInit();
+    timerSetup();
 
 
-	DIO_PinMode(LR, OUTPUT);
-	DIO_PinMode(LL, OUTPUT);
-
-	DIO_PinMode(ENCODER_L, INPUT);
-	DIO_PinMode(ENCODER_R, INPUT);
-
-	DIO_PinMode(DIO_B5, OUTPUT);		//internal LED 
+    i2c_init();
+    lcd_init();
+    _delay_ms(100);
 
 
+
+    lcd_Clear();
+
+while(1)
+{
+    lcd_GoTo(0, 1);
+    lcd_WriteString("Temp_Avg: ");
+    lcd_WriteInt(Temp_Avg());
+    if(Temp_Avg() > 23)
+    {
+        robotForward(255);
+    }
+    else
+    {
+        robotStop();
+    }
+    _delay_ms(100);
+    lcd_Clear();
+
+}
+}
+
+
+
+
+
+
+
+
+/*
+#include <avr/io.h>
+#include <util/delay.h>
+#include <stdbool.h>
+
+#define SLAVE_ADDRESS_LCD 0x27  // Set the slave address of the LCD
+
+void I2C_Init()
+{
+    TWSR = 0x00;   // Set prescalar to 1 and clear status register
+    TWBR = 0x0C;   // Set bit rate generator value for 100khz
+}
+
+void I2C_Start()
+{
+    TWCR = (1 << TWINT) | (1 << TWSTA) | (1 << TWEN);  // Send start condition
+    while (!(TWCR & (1 << TWINT)));  // Wait for start condition to be transmitted
+}
+
+void I2C_Stop()
+{
+    TWCR = (1 << TWINT) | (1 << TWSTO) | (1 << TWEN);  // Send stop condition
+    _delay_us(10);
+}
+
+void I2C_Write(unsigned char data)
+{
+    TWDR = data;   // Load data into data register
+    TWCR = (1 << TWINT) | (1 << TWEN);  // Start transmission
+    while (!(TWCR & (1 << TWINT)));  // Wait for transmission to complete
+}
+
+void LCD_Init()
+{
+    I2C_Start();  // Initiate start condition
+    I2C_Write(SLAVE_ADDRESS_LCD);  // Send slave address
+    I2C_Write(0x00);  // Set register to command mode
+    I2C_Write(0x38);  // Initialize 2 lines and 5x8 dot format
+    I2C_Write(0x06);  // Increment cursor and don't shift display
+    I2C_Write(0x0C);  // Turn on display, cursor, and blinking
+    I2C_Stop();  // Initiate stop condition
+}
+
+void LCD_Clear()
+{
+    I2C_Start();  // Initiate start condition
+    I2C_Write(SLAVE_ADDRESS_LCD);  // Send slave address
+    I2C_Write(0x00);  // Set register to command mode
+    I2C_Write(0x01);  // Clear display
+    I2C_Stop();  // Initiate stop condition
+}
+
+void LCD_Write_Char(char data)
+{
+    I2C_Start();  // Initiate start condition
+    I2C_Write(SLAVE_ADDRESS_LCD);  // Send slave address
+    I2C_Write(0x40);  // Set register to data mode
+    I2C_Write(data);  // Write data to display
+    I2C_Stop();  // Initiate stop condition
+}
+
+void LCD_Write_String(char* string)
+{
+    while (*string)  // Loop through each character in the string
+    {
+        LCD_Write_Char(*string++);  // Write character to display
+    }
+}
+
+int main()
+{
+    I2C_Init();  // Initialize I2C communication
+    LCD_Init();  // Initialize LCD
+    LCD_Clear();  // Clear LCD screen
+    LCD_Write_String("Hello, world!");  // Write string to LCD
+
+    while (true)
+    {
+        // Do nothing
+    }
+
+    return 0;
+}
+
+
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+
+#include "HAL/robotCtrl.h"
+
+int main()
+{
+	volatile u8 spd = 255;
+	carInit();
 
 	// initializing timer 1A & 1B as fast_PWM, non_inverting 
 	timerSetup();
 	
-	
 	UART_Init();
-
-
-
 	volatile u8 reading = 0;
 
 while(1)
@@ -128,13 +239,13 @@ while(1)
 		case 'R':case 'r':    DIO_DigitalWritePin(DIO_B5, LOW);  robotTurnRight (spd);       break;    
 		case 'L':case 'l':    DIO_DigitalWritePin(DIO_B5, LOW);  robotTurnLeft  (spd);       break;    
 		case 'S':case 's':    DIO_DigitalWritePin(DIO_B5, HIGH); robotStop      ();          break;    
-		case '1':             spd = 30;          break;    
-		case '2':             spd = 60;          break;    
-		case '3':             spd = 90;          break;    
-		case '4':             spd = 120;         break;    
-		case '5':             spd = 150;         break;    
-		case '6':             spd = 180;         break;    
-		case '7':             spd = 200;         break;    
+		case '1':             spd = 60;          break;    
+		case '2':             spd = 85;          break;    
+		case '3':             spd = 110;         break;    
+		case '4':             spd = 135;         break;    
+		case '5':             spd = 160;         break;    
+		case '6':             spd = 185;         break;    
+		case '7':             spd = 210;         break;    
 		case 'q':             spd = 255;         break;    
 	}
 
@@ -142,189 +253,8 @@ while(1)
 }
 }
 
-
-void robotBackward (int robospeed)
-{
-	DIO_DigitalWritePin(MA1, HIGH);      
-	DIO_DigitalWritePin(MA2, LOW);
-
-	DIO_DigitalWritePin(MB3, HIGH);      
-	DIO_DigitalWritePin(MB4, LOW);
-	
-	DIO_PWMWritePin(MAen, robospeed);
-	DIO_PWMWritePin(MBen, robospeed);
-	
-	// if(totalReadL > totalReadR)
-	// {
-	// 	DIO_DigitalWritePin(MAen, 0);
-	// }
-
-	// else if(totalReadR > totalReadL)
-	// {
-	// 	DIO_DigitalWritePin(MBen, 0);
-	// }
-	
-	// else
-	// {
-	// 	DIO_DigitalWritePin(MAen, HIGH);
-	// 	DIO_DigitalWritePin(MBen, HIGH);
-	// }
-
-	DIO_DigitalWritePin(LR, LOW); 
-	DIO_DigitalWritePin(LL, LOW);
-}
-
-void robotForward (int robospeed)
-{
-	DIO_DigitalWritePin(MA1, LOW);       
-	DIO_DigitalWritePin(MA2, HIGH);
-
-	DIO_DigitalWritePin(MB3, LOW);       
-	DIO_DigitalWritePin(MB4, HIGH);
-
-	DIO_PWMWritePin(MAen, robospeed);
-	DIO_PWMWritePin(MBen, robospeed);
-	
-	// if(totalReadL > totalReadR)
-	// {
-	// 	DIO_DigitalWritePin(MAen, 0);
-	// }
-	// else if(totalReadR > totalReadL)
-	// {
-	// 	DIO_DigitalWritePin(MBen, 0);
-	// }
-	// else
-	// {
-	// 	DIO_DigitalWritePin(MAen, HIGH);
-	// 	DIO_DigitalWritePin(MBen, HIGH);
-	// }
-
-	DIO_DigitalWritePin(LR, LOW); 
-	DIO_DigitalWritePin(LL, LOW);
-}
-
-
-//MA ---- Left & MB -----Right
-void robotTurnRight (int robospeed)
-{
-
-
-	DIO_PWMWritePin(MAen, robospeed);
-	DIO_DigitalWritePin(MA1, HIGH);      
-	DIO_DigitalWritePin(MA2, LOW);
-
-	
-	DIO_PWMWritePin(MBen, robospeed);
-	DIO_DigitalWritePin(MB3, LOW);       
-	DIO_DigitalWritePin(MB4, HIGH);
-
-	DIO_DigitalWritePin(LL, LOW);
-	DIO_DigitalWritePin(LR, HIGH);
-	// if(time(&tm) - prevTime > BLINK_CYCLE )
-	// { 
-	// prevTime=time(&tm);
-	// DIO_DigitalWritePin(LR,  (color++)%2); 
-	// }
-}
-
-void robotTurnLeft (int robospeed)
-{
-	
-	DIO_PWMWritePin(MAen, robospeed);
-	DIO_DigitalWritePin(MA1, LOW);       
-	DIO_DigitalWritePin(MA2, HIGH);
-	
-	
-	DIO_PWMWritePin(MBen, robospeed);
-	DIO_DigitalWritePin(MB3, HIGH);      
-	DIO_DigitalWritePin(MB4, LOW);
-
-	DIO_DigitalWritePin(LL, HIGH);
-	DIO_DigitalWritePin(LR, LOW);
-	// if(time(&tm) - prevTime > BLINK_CYCLE )
-	// {
-	// 	prevTime=time(&tm); 
-	// 	DIO_DigitalWritePin(LL,  (color++)%2); 
-	// }
-}
-
-void robotStop ()
-{
-	DIO_DigitalWritePin(MA1, LOW);       
-	DIO_DigitalWritePin(MA2, LOW);
-
-	DIO_DigitalWritePin(MB3, LOW);       
-	DIO_DigitalWritePin(MB4, LOW);
-
-	DIO_DigitalWritePin(LR,  LOW);  
-	DIO_DigitalWritePin(LL, LOW);
-	totalReadL = totalReadR = 0;
-}
-
-
-void updateEncoderReadings()
-{
-	if(   DIO_DigitalReadPin(ENCODER_L) - prevEncoderReadL   )
-	{    ++totalReadL; }
-
-	if(   DIO_DigitalReadPin(ENCODER_R) - prevEncoderReadR   )
-	{    ++totalReadR; }
-
-	prevEncoderReadR = DIO_DigitalReadPin(ENCODER_R);
-	prevEncoderReadL = DIO_DigitalReadPin(ENCODER_L);
-
-}
-
-
-bool UART_available(){
-
-	if (UCSR0A & (1 << RXC0))	{		return 1;	}
-	else 						{		return 0;	}
-
-}
+*/
 
 
 
 
-void timerSetup()
-{
-	
-	SET_BIT(DDRB, 1);
-	SET_BIT(DDRB, 2);
-
-	// TCCR1A = (1<< WGM11) | (1<<COM1A1) | (1<<COM1B1) | (1<<COM1A0) | (1<<COM1B0);
-	TCCR1A = (1<< WGM11) | (1<<COM1A1) | (1<<COM1B1) | (1<<COM1A0) | (1<<COM1B0);
-	TCCR1B = (1<< WGM13) | (1<<WGM12) | (1<<CS10);
-	
-	ICR1 = 255;
-
-
-	OCR1A = 128;
-	OCR1B = 128;
-	
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// while (1)
-	// {
-	// 	for(int i=0; i<2000; i++){ robotForward(255);    updateEncoderReadings(); _delay_ms(1);}
-	// 	for(int i=0; i<2000; i++){ robotBackward(255);   updateEncoderReadings(); _delay_ms(1);}
-	// 	for(int i=0; i<2000; i++){ robotTurnRight(255);  updateEncoderReadings(); _delay_ms(1);}
-	// 	for(int i=0; i<2000; i++){ robotTurnLeft(255);   updateEncoderReadings(); _delay_ms(1);}
-	// 	for(int i=0; i<2000; i++){ robotStop();          updateEncoderReadings(); _delay_ms(1);}
-	// }

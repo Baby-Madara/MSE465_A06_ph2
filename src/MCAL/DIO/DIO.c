@@ -226,17 +226,6 @@ void DIO_PWMInitPin(u8 port, u8 pin)
 	CLEAR_BIT(TCCR1B, COM1B0);
 
 
-	// Set PWM frequency (in this case, 500 Hz)
-
-
-	// Set Timer/Counter1 to PWM mode
-
-
-	// Set OC1A as output pin
-
-
-	// Set duty cycle (in this case, 50%)
-
 }
 
 
